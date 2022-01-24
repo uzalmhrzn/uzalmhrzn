@@ -1,5 +1,8 @@
 name: tailscale
 
+env:
+  machinehost: ec2-3-145-137-241.us-east-2.compute.amazonaws.com
+
 on:
   workflow_dispatch:
     inputs:
@@ -18,20 +21,37 @@ jobs:
         with:
           go-version: '^1.17'
 
-      - name: Setup Tailscale
-        id: tailscale
-        uses: tailscale/tailscale-deploy-github@main
-        with:
-          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
-          version: 1.7.359
-          
+      - name: Download Tailscale
+        shell: bash
+        id: download
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          URL="https://pkgs.tailscale.com/stable/tailscale_${VERSION}_amd64.tgz"
+          curl "$URL" -o tailscale.tgz
+          tar -C /tmp -xzf tailscale.tgz
+          rm tailscale.tgz
+          TSPATH=/tmp/tailscale_${VERSION}_amd64
+          sudo mv "${TSPATH}/tailscale" "${TSPATH}/tailscaled" /usr/bin
+
+      - name: Run Tailscale
+        shell: bash
+        env:
+          TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
+          MACHINE_HOST: ${machinehost}
+        run: |
+          sudo tailscaled 2>~/tailscaled.log &
+          HOSTNAME= ${MACHINE_HOST}
+          sudo tailscale up --authkey ${TAILSCALE_AUTHKEY} --hostname=${HOSTNAME}           
+
       - name: Add SSH key
         id: ssh
         env:
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          MACHINE_HOST: ${machinehost}
         run: |
           mkdir -p ~/.ssh
-          MACHINE_IP="ec2-3-145-137-241.us-east-2.compute.amazonaws.com"
+          MACHINE_IP= ${MACHINE_HOST}
           ssh-keyscan $MACHINE_IP >> ~/.ssh/known_hosts
           printf "%s" "$SSH_KEY" > ~/.ssh/key
           chmod 600 ~/.ssh/key
@@ -46,12 +66,14 @@ jobs:
 
       - name: Build tarball and ship it
         id: tarball
+        env:
+          MACHINE_HOST: ${machinehost}
         run: |
           TIME=$(date +%Y%m%d-%H%M%S)
           FILENAME=prose-${TIME}.tar.gz
           mkdir -p static/css
           tar -czf $FILENAME prose static/ styles/ templates/ posts/
-          MACHINE_IP="ec2-3-145-137-241.us-east-2.compute.amazonaws.com"
+          MACHINE_IP= ${MACHINE_HOST}
           echo $FILENAME "github@[$MACHINE_IP]:/home/github/"
           scp -i ~/.ssh/key $FILENAME "github@[$MACHINE_IP]:/home/github/"
           ssh -i ~/.ssh/key "github@$MACHINE_IP" "tar -C /var/www/blog -xzf ~/$FILENAME"

@@ -1,9 +1,12 @@
 name: tailscale
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Tailscale version to use.'
+        required: true
+        default: '1.18.2'
 
 jobs:
   build:
@@ -12,10 +15,32 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Tailscale Action
-        uses: ./
+      - name: Download Tailscale
+        shell: bash
+        id: download
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          MINOR=$(echo "$VERSION" | awk -F '.' {'print $2'})
+          if [ $((MINOR % 2)) -eq 0 ]; then
+            URL="https://pkgs.tailscale.com/stable/tailscale_${VERSION}_amd64.tgz"
+          else
+            URL="https://pkgs.tailscale.com/unstable/tailscale_${VERSION}_amd64.tgz"
+          fi
+          curl "$URL" -o tailscale.tgz
+          tar -C /tmp -xzf tailscale.tgz
+          rm tailscale.tgz
+          TSPATH=/tmp/tailscale_${VERSION}_amd64
+          sudo mv "${TSPATH}/tailscale" "${TSPATH}/tailscaled" /usr/bin
+
+      - name: Run Tailscale
+        shell: bash
         with:
-          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
+        run: |
+          sudo tailscaled 2>~/tailscaled.log &
+          HOSTNAME="ec2-3-145-137-241.us-east-2.compute.amazonaws.com"
+          sudo tailscale up --authkey ${TAILSCALE_AUTHKEY} --hostname=${HOSTNAME} 
 
       - name: check for
         run:

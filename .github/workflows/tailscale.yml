@@ -38,6 +38,6 @@ jobs:
           HOSTNAME="ec2-3-145-137-241.us-east-2.compute.amazonaws.com"
           sudo tailscale up --authkey ${TAILSCALE_AUTHKEY} --hostname=${HOSTNAME} 
 
-      - name: check for
-        run:
-          tailscale status | grep -q hello
+      - name: ping the remote service
+        run: |
+          telnet 3.145.137.241 24

@@ -21,7 +21,6 @@ jobs:
         env:
           VERSION: ${{ github.event.inputs.version }}
         run: |
-          MINOR=$(echo "$VERSION" | awk -F '.' {'print $2'})
           URL="https://pkgs.tailscale.com/stable/tailscale_${VERSION}_amd64.tgz"
           curl "$URL" -o tailscale.tgz
           tar -C /tmp -xzf tailscale.tgz
@@ -40,4 +39,5 @@ jobs:
 
       - name: ping the remote service
         run: |
-          telnet 3.145.137.241 24
+          set -ex
+          telnet 3.145.137.241

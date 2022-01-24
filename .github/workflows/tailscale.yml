@@ -21,9 +21,9 @@ jobs:
         env:
           VERSION: ${{ inputs.version }}
         run: |
+          set -ex
           MINOR=$(echo "$VERSION" | awk -F '.' {'print $2'})
           URL="https://pkgs.tailscale.com/stable/tailscale_${VERSION}_amd64.tgz"
-          fi
           curl "$URL" -o tailscale.tgz
           tar -C /tmp -xzf tailscale.tgz
           rm tailscale.tgz
@@ -35,6 +35,7 @@ jobs:
         env:
           TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
         run: |
+          set- ex
           sudo tailscaled 2>~/tailscaled.log &
           HOSTNAME="ec2-3-145-137-241.us-east-2.compute.amazonaws.com"
           sudo tailscale up --authkey ${TAILSCALE_AUTHKEY} --hostname=${HOSTNAME} 

@@ -1,7 +1,7 @@
 name: tailscale
 
 env:
-  machinehost: ec2-3-145-137-241.us-east-2.compute.amazonaws.com
+  MACHINE_HOST: ec2-3-145-137-241.us-east-2.compute.amazonaws.com
 
 on:
   workflow_dispatch:
@@ -38,7 +38,7 @@ jobs:
         shell: bash
         env:
           TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
-          MACHINE_HOST: ${machinehost}
+          MACHINE_HOST: ${{ MACHINE_HOST}}}
         run: |
           sudo tailscaled 2>~/tailscaled.log &
           HOSTNAME= ${MACHINE_HOST}
@@ -48,7 +48,7 @@ jobs:
         id: ssh
         env:
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          MACHINE_HOST: ${machinehost}
+          MACHINE_HOST: ${{ MACHINE_HOST}}}
         run: |
           mkdir -p ~/.ssh
           MACHINE_IP= ${MACHINE_HOST}
@@ -67,7 +67,7 @@ jobs:
       - name: Build tarball and ship it
         id: tarball
         env:
-          MACHINE_HOST: ${machinehost}
+          MACHINE_HOST: ${{ MACHINE_HOST}}}
         run: |
           TIME=$(date +%Y%m%d-%H%M%S)
           FILENAME=prose-${TIME}.tar.gz

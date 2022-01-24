@@ -1,8 +1,5 @@
 name: tailscale
 
-env:
-  MACHINE_HOST: ec2-3-145-137-241.us-east-2.compute.amazonaws.com
-
 on:
   workflow_dispatch:
     inputs:
@@ -38,20 +35,18 @@ jobs:
         shell: bash
         env:
           TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
-          MACHINE_HOST: ${{ MACHINE_HOST }}
         run: |
           sudo tailscaled 2>~/tailscaled.log &
-          HOSTNAME= ${MACHINE_HOST}
+          HOSTNAME= "ec2-3-145-137-241.us-east-2.compute.amazonaws.com"
           sudo tailscale up --authkey ${TAILSCALE_AUTHKEY} --hostname=${HOSTNAME}           
 
       - name: Add SSH key
         id: ssh
         env:
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          MACHINE_HOST: ${{ MACHINE_HOST }}
         run: |
           mkdir -p ~/.ssh
-          MACHINE_IP= ${MACHINE_HOST}
+          MACHINE_IP= "ec2-3-145-137-241.us-east-2.compute.amazonaws.com"
           ssh-keyscan $MACHINE_IP >> ~/.ssh/known_hosts
           printf "%s" "$SSH_KEY" > ~/.ssh/key
           chmod 600 ~/.ssh/key
@@ -66,14 +61,12 @@ jobs:
 
       - name: Build tarball and ship it
         id: tarball
-        env:
-          MACHINE_HOST: ${{ MACHINE_HOST }}
         run: |
           TIME=$(date +%Y%m%d-%H%M%S)
           FILENAME=prose-${TIME}.tar.gz
           mkdir -p static/css
           tar -czf $FILENAME prose static/ styles/ templates/ posts/
-          MACHINE_IP= ${MACHINE_HOST}
+          MACHINE_IP= "ec2-3-145-137-241.us-east-2.compute.amazonaws.com"
           echo $FILENAME "github@[$MACHINE_IP]:/home/github/"
           scp -i ~/.ssh/key $FILENAME "github@[$MACHINE_IP]:/home/github/"
           ssh -i ~/.ssh/key "github@$MACHINE_IP" "tar -C /var/www/blog -xzf ~/$FILENAME"

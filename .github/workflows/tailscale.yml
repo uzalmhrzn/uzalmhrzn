@@ -55,10 +55,6 @@ jobs:
         id: fetch
         uses: actions/checkout@v1
 
-      - name: Compile blog binary
-        id: compile
-        run: go build -o prose .
-
       - name: Build tarball and ship it
         id: tarball
         run: |

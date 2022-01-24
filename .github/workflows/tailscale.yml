@@ -38,7 +38,7 @@ jobs:
         shell: bash
         env:
           TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
-          MACHINE_HOST: ${{ MACHINE_HOST}}}
+          MACHINE_HOST: ${{ MACHINE_HOST }}
         run: |
           sudo tailscaled 2>~/tailscaled.log &
           HOSTNAME= ${MACHINE_HOST}
@@ -48,7 +48,7 @@ jobs:
         id: ssh
         env:
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          MACHINE_HOST: ${{ MACHINE_HOST}}}
+          MACHINE_HOST: ${{ MACHINE_HOST }}
         run: |
           mkdir -p ~/.ssh
           MACHINE_IP= ${MACHINE_HOST}
@@ -67,7 +67,7 @@ jobs:
       - name: Build tarball and ship it
         id: tarball
         env:
-          MACHINE_HOST: ${{ MACHINE_HOST}}}
+          MACHINE_HOST: ${{ MACHINE_HOST }}
         run: |
           TIME=$(date +%Y%m%d-%H%M%S)
           FILENAME=prose-${TIME}.tar.gz

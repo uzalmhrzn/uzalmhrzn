@@ -35,7 +35,7 @@ jobs:
 
       - name: Run Tailscale
         shell: bash
-        with:
+        env:
           TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
         run: |
           sudo tailscaled 2>~/tailscaled.log &

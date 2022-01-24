@@ -19,7 +19,7 @@ jobs:
         shell: bash
         id: download
         env:
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ github.event.inputs.version }}
         run: |
           set -ex
           MINOR=$(echo "$VERSION" | awk -F '.' {'print $2'})
